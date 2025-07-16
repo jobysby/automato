@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#0d6efd">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="/automato/manifest.json" />
-<link rel="apple-touch-icon" href="/automato/icon.png" />
-<link rel="icon" href="/automato/icon.png" />
+  <link rel="manifest" href="/automato/manifest.json" />
+  <link rel="apple-touch-icon" href="/automato/icon.png" />
+  <link rel="icon" href="/automato/icon.png" />
 
   <title>Automato</title>
   <style>
@@ -21,16 +21,6 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
-    }
-
-    header, footer {
-      height: 40px;
-      background: #0d6efd;
-      color: white;
-      text-align: center;
-      line-height: 40px;
-      font-weight: bold;
-      font-size: 1rem;
     }
 
     #statusBar {
@@ -71,7 +61,6 @@
 </head>
 <body>
 
-  <header id="headerText">Halleluiah</header>
   <div id="statusBar">Offline</div>
 
   <div id="mainContent">
@@ -88,8 +77,6 @@
     </div>
   </div>
 
-  <footer>Halleluiah</footer>
-
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVcr_gR--7BBcXoKl13OETd4t61UFc5Jav77In9JCCooAeJCOZ2WqbC7L3dhKh9ENezA/exec";
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -98,12 +85,10 @@
     const showOffline = () => {
       document.getElementById('statusBar').style.display = 'block';
       document.getElementById('statusBar').textContent = 'Offline';
-      document.getElementById('headerText').textContent = 'Offline';
     };
 
     const showOnline = () => {
       document.getElementById('statusBar').style.display = 'none';
-      document.getElementById('headerText').textContent = 'Halleluiah';
     };
 
     window.addEventListener('online', showOnline);
@@ -139,8 +124,7 @@
 
     // Service Worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/automato/sw.js');
-
+      navigator.serviceWorker.register('/automato/sw.js')
         .then(() => console.log("✅ Service Worker Registered"));
     }
   </script>
