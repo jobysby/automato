@@ -2,44 +2,144 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#ffffff" />
-  <link rel="manifest" href="manifest.json" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d6efd">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/automato-pwa/manifest.json" />
+  <link rel="apple-touch-icon" href="/automato-pwa/icon-192.png">
+  <link rel="icon" href="/automato-pwa/icon-192.png">
   <title>Automato</title>
-</head>
-<body style="margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
-  <h2>Welcome to Automato</h2>
-  <button id="startBtn" style="padding:10px 20px;font-size:16px;">Open App</button>
-
-  <script>
-    const redirectUrl = "https://script.google.com/macros/s/AKfycbxVcr_gR--7BBcXoKl13OETd4t61UFc5Jav77In9JCCooAeJCOZ2WqbC7L3dhKh9ENezA/exec";
-
-    // Auto-redirect if already installed
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-    if (isStandalone) {
-      window.location.replace(redirectUrl);
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
-    let deferredPrompt;
+    header, footer {
+      height: 40px;
+      background: #0d6efd;
+      color: white;
+      text-align: center;
+      line-height: 40px;
+      font-weight: bold;
+      font-size: 1rem;
+    }
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
+    #statusBar {
+      font-size: 0.85rem;
+      color: white;
+      background: #dc3545;
+      text-align: center;
+      display: none;
+    }
+
+    #mainContent {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #welcome, #appFrame {
+      flex-grow: 1;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    #installBtn {
+      margin-top: 2rem;
+      padding: 0.7rem 1.2rem;
+      font-size: 1rem;
+    }
+
+    iframe {
+      border: none;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <header id="headerText">Halleluiah</header>
+  <div id="statusBar">Offline</div>
+
+  <div id="mainContent">
+    <!-- Welcome Screen -->
+    <div id="welcome">
+      <h1>🙏 Automato</h1>
+      <p>Install this app for best experience.</p>
+      <button id="installBtn" onclick="installApp()">📲 Install App</button>
+    </div>
+
+    <!-- App Frame (loaded after install) -->
+    <div id="appFrame">
+      <iframe id="appIframe" src=""></iframe>
+    </div>
+  </div>
+
+  <footer>Halleluiah</footer>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVcr_gR--7BBcXoKl13OETd4t61UFc5Jav77In9JCCooAeJCOZ2WqbC7L3dhKh9ENezA/exec";
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+    // Online/offline detection
+    const showOffline = () => {
+      document.getElementById('statusBar').style.display = 'block';
+      document.getElementById('statusBar').textContent = 'Offline';
+      document.getElementById('headerText').textContent = 'Offline';
+    };
+
+    const showOnline = () => {
+      document.getElementById('statusBar').style.display = 'none';
+      document.getElementById('headerText').textContent = 'Halleluiah';
+    };
+
+    window.addEventListener('online', showOnline);
+    window.addEventListener('offline', showOffline);
+    window.addEventListener('load', () => {
+      navigator.onLine ? showOnline() : showOffline();
     });
 
-    document.getElementById('startBtn').addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-      }
+    // Standalone logic
+    if (isStandalone) {
+      document.getElementById("appFrame").style.display = "block";
+      document.getElementById("appIframe").src = SCRIPT_URL;
+    } else {
+      document.getElementById("welcome").style.display = "flex";
 
-      setTimeout(() => {
-        window.location.href = redirectUrl;
-      }, 500);
-    });
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById("installBtn").style.display = "inline-block";
+      });
 
+      window.installApp = function () {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(() => {
+            deferredPrompt = null;
+            document.getElementById("installBtn").style.display = "none";
+          });
+        }
+      };
+    }
+
+    // Service Worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js');
+      navigator.serviceWorker.register('/automato-pwa/sw.js')
+        .then(() => console.log("✅ Service Worker Registered"));
     }
   </script>
 </body>
