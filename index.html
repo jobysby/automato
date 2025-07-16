@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Automato</title>
+</head>
+<body style="margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;">
+  <h2>Welcome to Automato</h2>
+  <button id="startBtn" style="padding:10px 20px;font-size:16px;">Open App</button>
+
+  <script>
+    const redirectUrl = "https://script.google.com/macros/s/AKfycbxVcr_gR--7BBcXoKl13OETd4t61UFc5Jav77In9JCCooAeJCOZ2WqbC7L3dhKh9ENezA/exec";
+
+    // Auto-redirect if already installed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      window.location.replace(redirectUrl);
+    }
+
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+      }
+
+      setTimeout(() => {
+        window.location.href = redirectUrl;
+      }, 500);
+    });
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
