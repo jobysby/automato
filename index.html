@@ -31,62 +31,47 @@
       display: none;
     }
 
-    #installBanner {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 9999;
-      background: #fff7cc;
-      color: #333;
-      text-align: center;
-      padding: 0.8em 1em;
-      border-bottom: 1px solid #ccc;
-      font-size: 1em;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
-    }
-    #installBanner button {
-      margin-left: 1em;
-      padding: 0.4em 1em;
-      background: #0d6efd;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 1em;
-    }
-
     #mainContent {
       flex-grow: 1;
       display: flex;
       flex-direction: column;
     }
 
-    #appFrame {
+    #welcome, #appFrame {
       flex-grow: 1;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       flex-direction: column;
       text-align: center;
-      width: 100vw;
-      height: 100vh;
+    }
+
+    #installBtn {
+      margin-top: 2rem;
+      padding: 0.7rem 1.2rem;
+      font-size: 1rem;
     }
 
     iframe {
       border: none;
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
     }
   </style>
 </head>
 <body>
 
   <div id="statusBar">Offline</div>
-  <div id="installBanner"></div>
 
   <div id="mainContent">
+    <!-- Welcome Screen -->
+    <div id="welcome">
+      <h1>🙏 Automato</h1>
+      <p>Install this app for best experience.</p>
+      <button id="installBtn" onclick="installApp()">📲 Install App</button>
+    </div>
+
+    <!-- App Frame (loaded after install) -->
     <div id="appFrame">
       <iframe id="appIframe" src=""></iframe>
     </div>
@@ -95,11 +80,6 @@
   <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVcr_gR--7BBcXoKl13OETd4t61UFc5Jav77In9JCCooAeJCOZ2WqbC7L3dhKh9ENezA/exec";
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
-    // --- iOS Detection ---
-    function isIos() {
-      return /iphone|ipad|ipod/i.test(navigator.userAgent);
-    }
 
     // Online/offline detection
     const showOffline = () => {
@@ -117,47 +97,29 @@
       navigator.onLine ? showOnline() : showOffline();
     });
 
-    // Always show iframe
-    document.getElementById("appIframe").src = SCRIPT_URL;
+    // Standalone logic
+    if (isStandalone) {
+      document.getElementById("appFrame").style.display = "block";
+      document.getElementById("appIframe").src = SCRIPT_URL;
+    } else {
+      document.getElementById("welcome").style.display = "flex";
 
-    // --- Install Banner Logic ---
-    const banner = document.getElementById("installBanner");
-    let deferredPrompt;
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        document.getElementById("installBtn").style.display = "inline-block";
+      });
 
-    function closeBanner() {
-      banner.style.display = "none";
-    }
-
-    // For Android/Chrome PWA prompt
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      banner.innerHTML = `Install this app for best experience.<button onclick="installApp()">Install</button><button onclick="closeBanner()" style="background:#eee;color:#333;">Dismiss</button>`;
-      banner.style.display = "block";
-    });
-
-    window.installApp = function () {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-          deferredPrompt = null;
-          banner.style.display = "none";
-        });
-      }
-    };
-
-    // For iOS Add to Home Screen
-    if (!isStandalone && isIos()) {
-      banner.innerHTML = `
-        To install this app:<br>
-        <ol style="display:inline-block;text-align:left;max-width:270px;">
-          <li>Tap the <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/IOS_Share_icon.png" style="height:1.2em;vertical-align:middle" alt="Share"> <b>Share</b> button in Safari</li>
-          <li>Scroll down and tap <b>Add to Home Screen</b></li>
-          <li>Open from your home screen for the best experience!</li>
-        </ol>
-        <button onclick="closeBanner()" style="background:#eee;color:#333;">Dismiss</button>
-      `;
-      banner.style.display = "block";
+      window.installApp = function () {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(() => {
+            deferredPrompt = null;
+            document.getElementById("installBtn").style.display = "none";
+          });
+        }
+      };
     }
 
     // Service Worker
